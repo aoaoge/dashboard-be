@@ -34,4 +34,19 @@ public class UserService implements IUserService {
     public void save(User user) {
         userMapper.save(user);
     }
+
+    @Override
+    public User getById(Integer id) {
+        return userMapper.getById(id);
+    }
+
+    @Override
+    public void delete(Integer id) {
+        userMapper.delete(id);
+    }
+
+    @Override
+    public void update(User user) {
+        userMapper.updateById(user);
+    }
 }

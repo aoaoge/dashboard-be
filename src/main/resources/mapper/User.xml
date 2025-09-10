@@ -5,8 +5,14 @@
 <mapper namespace="org.example.librarybe.mapper.UserMapper">
     <insert id="save">
         insert into user(name, username, age, sex, phone, address)
-        values(#{name}, #{username}, #{age}, #{sex}, #{phone}, #{address},)
+        values(#{name}, #{username}, #{age}, #{sex}, #{phone}, #{address})
     </insert>
+    <update id="updateById">
+        update user set name = #{name}, age = #{age}, sex = #{sex}, phone = #{phone}, address = #{address} where id = #{id}
+    </update>
+    <delete id="delete">
+        delete from user where id = #{id}
+    </delete>
 
     <select id="list" resultType="org.example.librarybe.entity.User">
         select * from user
@@ -22,6 +28,11 @@
                 and phone like concat('%', #{phone}, '%')
             </if>
         </where>
+--         排序递减，大的在前面
+        order by id desc
+    </select>
+    <select id="getById" resultType="org.example.librarybe.entity.User">
+        select * from user where id = #{id}
     </select>
 
 </mapper>
