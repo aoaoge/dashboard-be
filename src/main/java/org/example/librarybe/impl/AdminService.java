@@ -9,6 +9,7 @@ import org.example.librarybe.controller.request.LoginRequest;
 import org.example.librarybe.entity.Admin;
 import org.example.librarybe.mapper.AdminMapper;
 import org.example.librarybe.service.IAdminService;
+import org.example.librarybe.utils.TokenUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -59,6 +60,11 @@ public class AdminService implements IAdminService {
             Admin admin = adminMapper.login(loginRequest);
             loginDTO = new LoginDTO();
             BeanUtils.copyProperties(admin, loginDTO);
+
+            // 生成token
+            String token = TokenUtils.genToken(String.valueOf(admin.getId()), admin.getPassword());
+
+            loginDTO.setToken(token);
             return loginDTO;
         }
         catch(Exception e) {
