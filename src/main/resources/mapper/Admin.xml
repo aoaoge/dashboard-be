@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.librarybe.mapper.AdminMapper">
+    <insert id="save">
+        insert into admin(name, username, email, password)
+        values(#{name}, #{username}, #{email}, #{password})
+    </insert>
+    <update id="update">
+        update admin set name = #{name}, username = #{username}, email = #{email}, password = #{password} where id = #{id}
+    </update>
+    <delete id="delete">
+        delete from admin where id = #{id}
+    </delete>
+
+    <select id="list" resultType="org.example.librarybe.entity.Admin">
+        select * from admin
+    </select>
+
+    <select id="page" resultType="org.example.librarybe.entity.Admin">
+        select * from Admin
+        <where>
+            <if test="name != null and name != ''">
+                name like concat('%', #{ name }, '%')
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone like concat('%', #{phone}, '%')
+            </if>
+        </where>
+--         排序递减，大的在前面
+        order by id desc
+    </select>
+    <select id="getById" resultType="org.example.librarybe.entity.Admin">
+        select * from admin where id = #{id}
+    </select>
+    <select id="login" resultType="org.example.librarybe.entity.Admin">
+        select * from admin where username = #{username} and password = #{password}
+    </select>
+
+</mapper>
