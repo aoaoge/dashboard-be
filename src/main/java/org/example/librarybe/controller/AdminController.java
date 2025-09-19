@@ -1,11 +1,14 @@
 package org.example.librarybe.controller;
 
 
+import cn.hutool.crypto.SecureUtil;
 import com.github.pagehelper.PageHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.example.librarybe.common.Result;
 import org.example.librarybe.controller.dto.LoginDTO;
 import org.example.librarybe.controller.request.AdminPageRequest;
 import org.example.librarybe.controller.request.LoginRequest;
+import org.example.librarybe.controller.request.PasswordRequest;
 import org.example.librarybe.entity.Admin;
 import org.example.librarybe.service.IAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @CrossOrigin
 @RestController
 @RequestMapping("admin")
@@ -23,12 +27,36 @@ public class AdminController {
     IAdminService adminService;
 
     @PostMapping("login")
-    public Result login(@RequestBody LoginRequest LoginRequest) {
-        LoginDTO admin = adminService.login(LoginRequest);
+    public Result login(@RequestBody LoginRequest loginRequest) {
+//        LoginDTO admin = adminService.login(loginRequest);
+        Admin admin = null;
+        try {
+            admin = adminService.loginByusername(loginRequest.getUsername());
+        } catch (Exception e) {
+            log.error("根据用户名{}查询出错", loginRequest.getUsername());
+        }
         if (admin == null) {
             return Result.error("用户名或密码错误");
         }
+        String securePass = securePass(loginRequest.getPassword());
+        if (!admin.getPassword().equals(securePass)) {
+            return Result.error("用户名或密码错误");
+        }
+        if (!admin.isStatus()) {
+            return Result.error("当前用户已禁用，请联系管理员");
+        }
         return Result.success(admin);
+    }
+
+    private static final String PASS_SALT = "aoge";
+    private String securePass(String pass) {
+        return SecureUtil.md5(pass + PASS_SALT);
+    }
+
+    @PostMapping("password")
+    public Result changePassword(@RequestBody PasswordRequest passwordRequest) {
+        adminService.changePassword(passwordRequest);
+        return Result.success();
     }
 
     @GetMapping("list")

@@ -20,4 +20,6 @@ public class Admin {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date updateTime;
 
+    private boolean status;
+
 }

@@ -1,12 +1,16 @@
 package org.example.librarybe.impl;
 
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.example.librarybe.common.Result;
 import org.example.librarybe.controller.dto.LoginDTO;
 import org.example.librarybe.controller.request.AdminPageRequest;
 import org.example.librarybe.controller.request.LoginRequest;
+import org.example.librarybe.controller.request.PasswordRequest;
 import org.example.librarybe.entity.Admin;
+import org.example.librarybe.exception.ServiceException;
 import org.example.librarybe.mapper.AdminMapper;
 import org.example.librarybe.service.IAdminService;
 import org.example.librarybe.utils.TokenUtils;
@@ -20,6 +24,8 @@ import java.util.List;
 @Service
 public class AdminService implements IAdminService {
 
+    private static final String PASS_SALT = "aoge";
+    private static final String DEFAULT_PASS = "123";
     @Autowired
     AdminMapper adminMapper;
 
@@ -35,6 +41,11 @@ public class AdminService implements IAdminService {
 
     @Override
     public void save(Admin admin) {
+
+        if (StrUtil.isBlank(admin.getPassword())) {
+            admin.setPassword(DEFAULT_PASS);
+        }
+        admin.setPassword(SecureUtil.md5(admin.getPassword() + PASS_SALT)); // md5加密加盐
         adminMapper.save(admin);
     }
 
@@ -54,22 +65,44 @@ public class AdminService implements IAdminService {
     }
 
     @Override
-    public LoginDTO login(LoginRequest loginRequest) {
-        LoginDTO loginDTO = null;
-        try {
-            Admin admin = adminMapper.login(loginRequest);
-            loginDTO = new LoginDTO();
-            BeanUtils.copyProperties(admin, loginDTO);
-
-            // 生成token
-            String token = TokenUtils.genToken(String.valueOf(admin.getId()), admin.getPassword());
-
-            loginDTO.setToken(token);
-            return loginDTO;
+    public LoginDTO login(LoginRequest request) {
+        request.setPassword(securePass(request.getPassword()));
+        Admin admin = adminMapper.getByUsernameAndPassword(request.getUsername(), request.getPassword());
+        if (admin == null) {
+            throw new ServiceException("用户名密码错误");
         }
-        catch(Exception e) {
-            log.error("登录失败");
-            return null;
+        if (!admin.isStatus()) {
+            throw new ServiceException("该用户已被禁用");
+        }
+        LoginDTO loginDTO = new LoginDTO();
+
+        BeanUtils.copyProperties(admin, loginDTO);
+
+        // 生成token
+        String token = TokenUtils.genToken(String.valueOf(admin.getId()), admin.getPassword());
+
+        loginDTO.setToken(token);
+        return loginDTO;
+    }
+
+    @Override
+    public void changePassword(PasswordRequest passwordRequest) {
+        passwordRequest.setNewPass(securePass(passwordRequest.getNewPass()));
+        passwordRequest.setPassword(securePass(passwordRequest.getPassword()));
+        Integer count = adminMapper.changePassword(passwordRequest);
+
+        if (count <= 0) {
+            throw new ServiceException("修改密码失败");
         }
     }
+
+    @Override
+    public Admin loginByusername(String username) {
+        return adminMapper.loginByUsername(username);
+    }
+
+    private String securePass(String pass) {
+        return SecureUtil.md5(pass + PASS_SALT);
+    }
+
 }

@@ -2,8 +2,10 @@ package org.example.librarybe.mapper;
 
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.example.librarybe.controller.request.AdminPageRequest;
 import org.example.librarybe.controller.request.LoginRequest;
+import org.example.librarybe.controller.request.PasswordRequest;
 import org.example.librarybe.entity.Admin;
 
 import java.util.List;
@@ -24,4 +26,10 @@ public interface AdminMapper {
     Admin getById(Integer id);
 
     Admin login(LoginRequest loginRequest);
+
+    Admin getByUsernameAndPassword(@Param("username") String username, @Param("password") String password);
+
+    int changePassword(PasswordRequest request);
+
+    Admin loginByUsername(String username);
 }
