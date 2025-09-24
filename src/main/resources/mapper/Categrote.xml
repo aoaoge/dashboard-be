@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.librarybe.mapper.CategroteMapper">
+    <insert id="addCategrote">
+        insert into categrote(name, remark, updateTime)
+        values(#{name}, #{remark}, #{updateTime})
+    </insert>
+    <update id="updateCategrote">
+        update categrote set name = #{name}, remark = #{remark} where id = #{id}
+    </update>
+    <delete id="deleteCategrote">
+        delete from categrote where id = #{id}
+    </delete>
+    <select id="getById" resultType="org.example.librarybe.entity.Categrote">
+        select * from categrote where id = #{id}
+    </select>
+    <select id="getList" resultType="org.example.librarybe.entity.Categrote">
+        select * from categrote
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (name like concat('%', #{keyword}, '%') or remark like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+</mapper>

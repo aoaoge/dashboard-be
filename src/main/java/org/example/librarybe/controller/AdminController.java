@@ -1,6 +1,7 @@
 package org.example.librarybe.controller;
 
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.github.pagehelper.PageHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.example.librarybe.controller.request.AdminPageRequest;
 import org.example.librarybe.controller.request.LoginRequest;
 import org.example.librarybe.controller.request.PasswordRequest;
 import org.example.librarybe.entity.Admin;
+import org.example.librarybe.exception.ServiceException;
 import org.example.librarybe.service.IAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,15 +25,16 @@ import java.util.List;
 public class AdminController {
 
 
+    private static final String DEFAULT_PASS = "123";
     @Autowired
     IAdminService adminService;
 
     @PostMapping("login")
     public Result login(@RequestBody LoginRequest loginRequest) {
 //        LoginDTO admin = adminService.login(loginRequest);
-        Admin admin = null;
+        LoginDTO admin = null;
         try {
-            admin = adminService.loginByusername(loginRequest.getUsername());
+            admin = adminService.login(loginRequest.getUsername());
         } catch (Exception e) {
             log.error("根据用户名{}查询出错", loginRequest.getUsername());
         }
@@ -74,7 +77,11 @@ public class AdminController {
 
     @PostMapping("save")
     public Result save(@RequestBody Admin admin) {
-        adminService.save(admin);
+        try {
+            adminService.save(admin);
+        } catch (Exception e) {
+            return Result.error("用户名已存在");
+        }
         return Result.success();
     }
 

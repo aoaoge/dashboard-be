@@ -4,7 +4,6 @@ package org.example.librarybe.impl;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.example.librarybe.common.Result;
 import org.example.librarybe.controller.dto.LoginDTO;
 import org.example.librarybe.controller.request.AdminPageRequest;
 import org.example.librarybe.controller.request.LoginRequest;
@@ -16,6 +15,7 @@ import org.example.librarybe.service.IAdminService;
 import org.example.librarybe.utils.TokenUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -46,7 +46,12 @@ public class AdminService implements IAdminService {
             admin.setPassword(DEFAULT_PASS);
         }
         admin.setPassword(SecureUtil.md5(admin.getPassword() + PASS_SALT)); // md5加密加盐
-        adminMapper.save(admin);
+        try {
+            adminMapper.save(admin);
+        } catch (DuplicateKeyException e) {
+            log.error("用户名{}已存在", admin.getUsername());
+            throw new ServiceException("用户名已存在");
+        }
     }
 
     @Override
@@ -65,9 +70,9 @@ public class AdminService implements IAdminService {
     }
 
     @Override
-    public LoginDTO login(LoginRequest request) {
-        request.setPassword(securePass(request.getPassword()));
-        Admin admin = adminMapper.getByUsernameAndPassword(request.getUsername(), request.getPassword());
+    public LoginDTO login(String username) {
+//        request.setPassword(securePass(request.getPassword()));
+        Admin admin = adminMapper.loginByUsername(username);
         if (admin == null) {
             throw new ServiceException("用户名密码错误");
         }
